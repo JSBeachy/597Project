@@ -21,8 +21,8 @@ complete_graph1.add_edges_from([(1, 2), (1, 3), (2, 3), (4, 5), (4, 6), (5, 6)])
 L = nx.laplacian_matrix(complete_graph1).toarray()
 S = np.array([1.5, 2, 2.5, 7.5, 8, 8.5])
 Z = np.linalg.inv(np.eye(6) + L) @ S
-print("Z values:", Z)
-print("Laplacian Matrix:")
+print("Converged Expressed opinions:", Z)
+#print("Laplacian Matrix:")
 #print(nx.laplacian_matrix(complete_graph1).toarray())
 
 # Plotting the graph
@@ -52,8 +52,8 @@ complete_graph1.add_edges_from([(1, 5), (1, 6), (2, 5), (2, 6), (4, 6), (3,1),(3
 L = nx.laplacian_matrix(complete_graph1).toarray()
 S = np.array([1, 1, 5, 5, 9, 9])
 Z = np.linalg.inv(np.eye(6) + L) @ S
-print("Z values:", Z)
-print("Laplacian Matrix:")
+print("Converged Expressed opinions:", Z)
+#print("Laplacian Matrix:")
 #print(nx.laplacian_matrix(complete_graph1).toarray())
 
 # Plotting the graph
@@ -125,7 +125,6 @@ plt.show()
 fig, ax2 = plt.subplots()
 zexp=np.linalg.inv(np.eye(nodes)+optimal_L)@s
 pos={i: (zexp[i], Lg.degree[i]+np.random.normal(0, 0.5)) for i in range(nodes)}
-print(pos)
 nx.draw_networkx(Lg, pos, with_labels=True, font_weight='bold', node_size=700, node_color='lightgreen', font_color='black', font_size=10, ax=ax2)
 ax2.tick_params(left=False, bottom=True, labelleft=False, labelbottom=True)
 ax2.set_xlabel('Expressed Opinion')
@@ -138,8 +137,8 @@ plt.show()
 ##################### Problem #2 ##################################
 
 nodes=10
-alpha=np.linspace(0,1,7) #total influence
-s= np.random.uniform(0, 1, nodes)
+alpha=np.linspace(0,2,7) #total influence
+s= np.random.uniform(0, 10, nodes)
 sbar= s-sum(s)/nodes
 
 #Create a random graph
@@ -156,10 +155,13 @@ Laplacian=nx.laplacian_matrix(random_graph).toarray()
 
 
 totalds=cp.Parameter()
-ds=cp.Variable([10])
-obj=cp.matrix_frac(s+ds,np.eye(nodes)+Laplacian)
+ds=cp.Variable(nodes)
+zstar=np.linalg.inv(np.eye(nodes)+Laplacian)@(s+ds)
+zbar=zstar-cp.sum(zstar)/nodes
+obj=zbar@(np.eye(nodes)+Laplacian)@zbar
 dsvault=[]
 dsvalue=[]
+
 for i in alpha:
     totalds.value=i
     constraints = [cp.norm(ds,1)<=totalds,s+ds>=0]
@@ -170,7 +172,7 @@ for i in alpha:
     optimal_ds=ds.value
     dsvault.append(optimal_ds)
     print(sum(optimal_ds))
-    print(f"Optimal value with alpha={i}:", problem.value)
+    print(f"Optimal value with alpha={round(i,3)}:", problem.value)
     
 
 plt.figure()
@@ -189,17 +191,15 @@ for g in random_graph.nodes:
     #plt.scatter(g.degree)
 plt.title("Optimal ds Compared to Node Degree")   
 plt.ylabel("ds value")
-plt.xlabel("Origianl Innane Opinion")
+plt.xlabel("Degree")
 
 
 fig, ax3 = plt.subplots()
 pos={i: (s[i], random_graph.degree[i]+np.random.normal(0, 0.5)) for i in range(nodes)}
-print(pos)
 # Show the plot
 nx.draw_networkx(random_graph, pos, with_labels=True, font_weight='bold', node_size=700, node_color='skyblue', font_color='black', font_size=10, ax=ax3)
-ax3.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+ax3.tick_params(left=False, bottom=True, labelleft=False, labelbottom=True)
 ax3.set_xlabel('Innate Belief')
-ax3.set_ylabel('Degree')
 ax3.set_title("Given Network")
 plt.show()
 
@@ -209,10 +209,9 @@ zexp=np.linalg.inv(np.eye(nodes)+Laplacian)@(s+dsvault[6])
 pos={i: (zexp[i], random_graph.degree[i]+np.random.normal(0, 0.2)) for i in range(nodes)}
 
 nx.draw_networkx(random_graph, pos, with_labels=True, font_weight='bold', node_size=700, node_color='lightgreen', font_color='black', font_size=10, ax=ax4)
-ax4.tick_params(left=True, bottom=True, labelleft=True, labelbottom=True)
+ax4.tick_params(left=False, bottom=True, labelleft=False, labelbottom=True)
 ax4.set_xlabel('Expressed Opinion')
-ax4.set_ylabel('Degree')
-ax4.set_title("Optimal Graph After Opinion Convergence")
+ax4.set_title("Given Network After Opinion Convergence")
 plt.show()
 
 fig, ax5 = plt.subplots()
@@ -221,25 +220,3 @@ ax5.set_xlabel('Total ds Budget')
 ax5.set_ylabel('PDI value')
 ax5.set_title('Plot of ds Budget vs PDI value')
 plt.show()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
